@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<!-- Chosen Palette: "Proposal Tan" - A professional and warm palette with tans, deep browns, and a clean off-white background. -->
+<!-- Application Structure Plan: A single-page application structured as a professional proposal packet. A tab-based navigation at the top allows the user to switch between six distinct sections: Cover Page, Financial Model, System Overview, Cost Breakdown, Partnership Options, and Founder's Note. This structure provides a clear, organized flow, making it easy for the client to digest complex information in manageable parts while maintaining a cohesive experience. Each tab reveals its corresponding content section via JavaScript. -->
+<!-- Visualization & Content Choices:
+    - Cover Page: Clean, professional text layout. Static for now.
+    - Financial Model: Interactive Chart.js chart, sliders/inputs for utilization and pricing models.
+    - System Overview: HTML/CSS diagrams, image placeholders for mockups.
+    - Cost Breakdown: Simple, clear table layout.
+    - Partnership Options: Side-by-side comparison layout using Flexbox/Grid.
+    - Founder's Note: Professional text layout.
+    This interactive approach is designed to be more engaging and informative than a static PDF.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paydax Partnership Proposal - Land of 1000 Hills</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif, system-ui;
+            background-color: #f4f1ea; /* Light beige background */
+        }
+        :root {
+            --primary-text: #4a4a4a; /* Dark Gray */
+            --secondary-text: #7a7a7a; /* Medium Gray */
+            --accent-color: #c5a78c; /* Muted Tan */
+            --accent-dark: #8c735d; /* Darker Tan */
+            --header-text: #3a2e25; /* Deep Brown */
+            --bg-card: #ffffff; /* White */
+            --border-color: #e5e0d7; /* Light border color */
+            --stat-bg: #f8f9fa; /* Light gray for stat cards */
+            --table-header-bg: #f8f9fa;
+        }
+        .proposal-container {
+            max-width: 1024px;
+            margin: 2rem auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .nav-tab {
+            color: var(--secondary-text);
+            border-bottom: 3px solid transparent;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        .nav-tab.active, .nav-tab:hover {
+            color: var(--header-text);
+            border-bottom-color: var(--accent-dark);
+        }
+        .content-section {
+            display: none;
+            animation: fadeInContent 0.6s ease-out;
+        }
+        @keyframes fadeInContent {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .content-section.active {
+            display: block;
+        }
+        h1, h2, h3, h4 { color: var(--header-text); font-weight: 600; }
+        p, li { color: var(--primary-text); line-height: 1.6; }
+        .cover-page {
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('https://placehold.co/1200x800/f4f1ea/c5a78c?text=LOTH');
+            background-size: cover;
+            background-position: center;
+        }
+        /* Slider Styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            border: 2px solid white;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--accent-dark);
+            cursor: pointer;
+            margin-top: -6px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+        input[type=range]::-moz-range-thumb {
+            border: 2px solid white;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--accent-dark);
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            max-height: 400px;
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto 0;
+        }
+        .icon-list li {
+            padding-left: 2.5rem;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .icon-list li svg {
+            position: absolute;
+            left: 0;
+            top: 5px;
+            width: 1.5rem;
+            height: 1.5rem;
+            color: var(--accent-dark);
+        }
+        .option-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .option-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+            border-color: var(--accent-dark);
+        }
+        .option-card-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+        .option-card li {
+            position: relative;
+            padding-left: 1.75rem; /* 28px */
+            margin-bottom: 0.75rem;
+        }
+        .option-card li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent-dark);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="proposal-container bg-white">
+        <!-- Navigation Tabs -->
+        <nav class="bg-gray-50 border-b border-gray-200">
+            <div class="flex flex-wrap justify-center -mb-px">
+                <button data-target="cover" class="nav-tab text-sm md:text-base font-medium p-4 active">Cover Page</button>
+                <button data-target="financials" class="nav-tab text-sm md:text-base font-medium p-4">Financial Model</button>
+                <button data-target="system" class="nav-tab text-sm md:text-base font-medium p-4">System & Designs</button>
+                <button data-target="costs" class="nav-tab text-sm md:text-base font-medium p-4">Cost Breakdown</button>
+                <button data-target="options" class="nav-tab text-sm md:text-base font-medium p-4">Partnership Options</button>
+                <button data-target="note" class="nav-tab text-sm md:text-base font-medium p-4">Founder's Note</button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- Section 1: Cover Page -->
+            <section id="cover" class="content-section active">
+                <div class="cover-page flex items-center justify-center p-8 md:p-20 text-center" style="min-height: 70vh;">
+                    <div class="bg-white bg-opacity-80 p-8 md:p-12 rounded shadow-lg">
+                        <h1 class="text-3xl md:text-5xl font-bold mb-2">Partnership Proposal</h1>
+                        <p class="text-xl md:text-2xl text-secondary mb-4">Transforming Your Meeting Rooms into Revenue-Generating Assets with Paydax</p>
+                        <div class="text-lg text-primary mt-8 border-t border-b border-gray-300 py-4">
+                            <p class="font-semibold">Prepared for:</p>
+                            <p>Sharee Taylor, Owner</p>
+                            <p>Land of 1000 Hills Coffee</p>
+                        </div>
+                        <div class="text-lg text-primary mt-4">
+                             <p class="font-semibold">Prepared by:</p>
+                             <p>Phillip Thornton & Seth Martin, Co-Founders</p>
+                             <p>Paydax</p>
+                        </div>
+                        <p class="mt-8 text-sm text-secondary">Date: June 10, 2025</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Financial Model -->
+            <section id="financials" class="content-section p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-2">Interactive Financial Projections</h2>
+                <p class="text-secondary mb-8">This model estimates the total monthly and annual revenue potential for your 5 meeting rooms. Adjust the sliders and inputs below to explore different scenarios and see how pricing and utilization rates can impact your earnings.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                    <!-- Interactive Controls -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div>
+                            <label for="pricePerHour" class="block font-medium text-primary">Price Per Hour</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="range" id="pricePerHour" min="5" max="50" value="15" step="1" class="w-full">
+                                <span id="priceValue" class="font-bold text-lg text-accent-dark w-20 text-center">$15/hr</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="utilizationRate" class="block font-medium text-primary">Daily Utilization Rate</label>
+                             <div class="flex items-center space-x-4">
+                                <input type="range" id="utilizationRate" min="5" max="80" value="20" step="5" class="w-full">
+                                <span id="utilizationValue" class="font-bold text-lg text-accent-dark w-20 text-center">20%</span>
+                            </div>
+                            <p class="text-xs text-secondary mt-1">Based on 13 operating hours (7am - 8pm).</p>
+                        </div>
+                        <div>
+                            <label for="daysOpen" class="block font-medium text-primary">Days Open Per Month</label>
+                             <input type="number" id="daysOpen" value="30" min="1" max="31" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent-dark focus:border-accent-dark">
+                        </div>
+                    </div>
+                    <!-- Calculated Outputs -->
+                    <div class="lg:col-span-2 grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-lg text-center border">
+                            <h4 class="text-sm font-medium text-secondary">Est. Monthly Revenue (Per Room)</h4>
+                            <p id="monthly-per-room" class="text-2xl font-bold text-header-text mt-1">$0</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center border">
+                            <h4 class="text-sm font-medium text-secondary">Est. Annual Revenue (Per Room)</h4>
+                            <p id="annual-per-room" class="text-2xl font-bold text-header-text mt-1">$0</p>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-lg text-center col-span-2 border border-accent-dark">
+                             <h4 class="text-md font-semibold text-secondary">Est. Total Monthly Revenue (All 5 Rooms)</h4>
+                            <p id="total-monthly" class="text-4xl font-bold text-accent-dark mt-1">$0</p>
+                        </div>
+                         <div class="bg-gray-100 p-4 rounded-lg text-center col-span-2 border border-accent-dark">
+                            <h4 class="text-md font-semibold text-secondary">Est. Total Annual Revenue (All 5 Rooms)</h4>
+                            <p id="total-annual" class="text-4xl font-bold text-accent-dark mt-1">$0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Visualization -->
+                <div class="chart-container">
+                    <canvas id="financialsChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Section 3: System & Designs -->
+            <section id="system" class="content-section p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-6">System Overview & Design Options</h2>
+                
+                <div class="mb-10">
+                    <h3 class="text-2xl font-bold mb-3">Our Approach: Minimal & Modern</h3>
+                    <p class="text-lg text-secondary">Our core concept is to retrofit your 5 existing meeting rooms with our Paydax access control technology. We understand the importance of your shop's aesthetic, and our primary goal is to integrate our system with **minimal visual change**. The hardware is sleek, modern, and designed to be as discreet as possible, complementing your beautiful space rather than distracting from it.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-12 mb-10">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-3">How The System Works</h3>
+                        <ol class="list-decimal list-inside space-y-4 text-primary">
+                            <li>A customer scans a QR code, which we can design and place elegantly on or next to the meeting room door.</li>
+                            <li>The user is prompted on their phone to pay a small minimum fee to unlock and access the room for their private session.</li>
+                            <li>Our system unlocks the door and tracks the session duration in real-time. The door remains unlocked for the user's convenience while their session is active.</li>
+                            <li>When finished, the customer checks out via their phone and is automatically charged for the exact time they used the room.</li>
+                            <li>The door automatically locks, making the room secure and ready for the next customer.</li>
+                        </ol>
+                    </div>
+                    <div>
+                         <img src="https://placehold.co/600x400/f4f1ea/8c735d?text=Discreet+Door+Hardware" alt="Mockup of sleek hardware on a meeting room door" class="rounded-lg shadow-md">
+                         <p class="text-center text-xs text-secondary mt-2">Example of a discreet hardware installation.</p>
+                    </div>
+                </div>
+
+                <div class="bg-stone-100 p-6 rounded-lg mb-10">
+                     <h3 class="text-2xl font-bold mb-3">Our Design Philosophy</h3>
+                     <p>We chose this dynamic pay-per-use model for two key reasons. First, it offers maximum **flexibility for your customers**, allowing them to pay only for what they need, whether it's a quick 10-minute call or a 2-hour work session. Second, this model **promotes natural turnover**, ensuring the rooms don't get occupied all day by a single person, which allows more of your customers to experience and benefit from this unique amenity.</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12">
+                     <div>
+                        <h3 class="text-2xl font-bold mb-3">Core Technology Components</h3>
+                        <ul class="icon-list">
+                            <li><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" /></svg><strong>Compute Module:</strong> A small computer (like a Raspberry Pi) that runs our software and acts as the brain for each room.</li>
+                            <li><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 6.087c0-.622.504-1.125 1.125-1.125h.375c.621 0 1.125.503 1.125 1.125v1.5c0 .622-.504 1.125-1.125 1.125h-.375a1.125 1.125 0 0 1-1.125-1.125v-1.5Zm-3.75 0c0-.622.504-1.125 1.125-1.125h.375c.621 0 1.125.503 1.125 1.125v1.5c0 .622-.504 1.125-1.125 1.125h-.375a1.125 1.125 0 0 1-1.125-1.125v-1.5Zm-3.75 0c0-.622.504-1.125 1.125-1.125h.375c.621 0 1.125.503 1.125 1.125v1.5c0 .622-.504 1.125-1.125 1.125h-.375A1.125 1.125 0 0 1 3 7.587v-1.5ZM3 15.587c0-.622.504-1.125 1.125-1.125h.375c.621 0 1.125.503 1.125 1.125v1.5c0 .622-.504 1.125-1.125 1.125h-.375A1.125 1.125 0 0 1 3 17.087v-1.5Zm3.75 0c0-.622.504-1.125 1.125-1.125h.375c.621 0 1.125.503 1.125 1.125v1.5c0 .622-.504 1.125-1.125 1.125h-.375a1.125 1.125 0 0 1-1.125-1.125v-1.5Zm3.75 0c0-.622.504-1.125 1.125-1.125h.375c.621 0 1.125.503 1.125 1.125v1.5c0 .622-.504 1.125-1.125 1.125h-.375a1.125 1.125 0 0 1-1.125-1.125v-1.5Z" /></svg><strong>Microcontroller:</strong> A small board that directly controls the electronic lock based on commands from the Compute Module.</li>
+                            <li><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg><strong>Electronic Lock:</strong> A secure, commercial-grade electronic strike or bolt lock.</li>
+                            <li><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" /></svg><strong>Door Latch Sensor:</strong> A sensor to know if the door is physically closed, ensuring the room can be re-locked securely.</li>
+                            <li><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg><strong>Wiring:</strong> Minimal, low-voltage wiring that we will conceal as neatly as possible.</li>
+                             <li><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" /></svg><strong>QR Code Signage:</strong> A professionally designed, durable sign placed on or near the door.</li>
+                        </ul>
+                     </div>
+                     <div class="mt-4 md:mt-0">
+                         <h3 class="text-2xl font-bold mb-3">A Collaborative Partnership</h3>
+                         <p>Our commitment is to fit these components to your space in a manner that feels integrated and premium, minimizing any impact on the wonderful aesthetic you've already created. We will work directly with you to decide on the final hardware appearance and placement.</p>
+                         <p class="mt-4">Furthermore, we see pricing as a partnership. We will collaborate with you to set an attractive entry fee and per-minute rate that makes sense for your customers. Our goal is to work together continuously to refine the user experience and ensure this is a seamless and successful addition to Land of 1000 Hills.</p>
+                     </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Cost Breakdown -->
+            <section id="costs" class="content-section p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-6">Project Investment & Partnership</h2>
+                <p class="text-secondary mb-8">We believe in transparent partnerships. Below is an estimated breakdown of the upfront costs to retrofit all 5 of your meeting rooms. Under our proposed pilot partnership, Paydax covers these costs to ensure there is zero financial risk for Land of 1000 Hills.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 mb-8">
+                        <thead style="background-color: var(--table-header-bg);">
+                            <tr>
+                                <th class="text-left font-semibold text-primary p-3">Cost Category</th>
+                                <th class="text-right font-semibold text-primary p-3">Estimated Total Cost (5 Rooms)</th>
+                                <th class="text-right font-semibold text-primary p-3">Estimated Cost Per Room</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-3 text-secondary">Paydax Hardware & Components</td>
+                                <td class="p-3 text-right text-secondary">$5,000 - $6,000</td>
+                                <td class="p-3 text-right text-secondary">$1,000 - $1,200</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-3 text-secondary">Professional Installation & Setup</td>
+                                <td class="p-3 text-right text-secondary">$2,500 - $3,000</td>
+                                <td class="p-3 text-right text-secondary">$500 - $600</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-3 text-secondary">Manufacturing & Logistics</td>
+                                <td class="p-3 text-right text-secondary">$1,500 - $2,500</td>
+                                <td class="p-3 text-right text-secondary">$300 - $500</td>
+                            </tr>
+                            <tr class="font-bold bg-gray-50">
+                                <td class="p-3 text-header-text">Estimated Total Project Investment</td>
+                                <td class="p-3 text-right text-header-text">$9,000 - $11,500</td>
+                                <td class="p-3 text-right text-header-text">$1,800 - $2,300</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-stone-100 p-6 rounded-lg mb-10 border border-accent-dark">
+                     <h3 class="text-2xl font-bold mb-3">Our Partnership Proposal: Paydax Covers 100%</h3>
+                     <p>As a true partner invested in mutual success, **Paydax proposes to cover the entire estimated project investment of $9,000 - $11,500.** This allows Land of 1000 Hills to benefit from this new revenue stream and enhanced customer amenity with absolutely no upfront capital expenditure or financial risk.</p>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-3">Optional Marketing Opportunity</h3>
+                    <p class="text-secondary mb-4">To generate initial buzz and ensure a successful launch, we have an opportunity to partner with Eugene at **Atlanta Coffee Shops**. This promotion would include a feature story, a shout-out to his 6,000+ newsletter subscribers, and an Instagram story post. The cost for this high-impact marketing ranges from **$400 - $3,000**.</p>
+                    <p>While Paydax covers all hardware and installation costs, this promotional activity is the one area where we propose a collaborative investment. We believe it will drive significant awareness and initial usage, and we are prepared to partner with Land of 1000 Hills on a **50/50 cost-share** for whichever marketing package we mutually decide is best.</p>
+                </div>
+            </section>
+
+            <!-- Section 5: Partnership Options -->
+            <section id="options" class="content-section p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-6">Partnership Options</h2>
+                <p class="text-secondary mb-8">We offer flexible partnership models designed to align with your business goals. Our recommended approach is the Pilot Partnership, which allows us to grow together with zero risk to you.</p>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Option 1: Pilot Partnership -->
+                    <div class="option-card flex flex-col">
+                        <div class="option-card-header p-4 bg-gray-50">
+                            <h3 class="text-xl font-bold text-center">Pilot Partnership</h3>
+                            <p class="text-center text-sm text-secondary">(Recommended)</p>
+                        </div>
+                        <div class="p-6 flex-grow">
+                            <p class="font-bold text-lg text-center text-header-text mb-4">50% / 50%</p>
+                            <p class="text-center text-sm text-secondary mb-6">Revenue Share</p>
+                            <ul class="text-sm space-y-3 option-card">
+                                <li>**Zero Upfront Cost:** Paydax covers 100% of all hardware, installation, and manufacturing costs.</li>
+                                <li>**Full Collaborative Support:** We work hand-in-hand on user experience, marketing, and system refinements.</li>
+                                <li>**Future-Ready:** Includes our commitment to implement Phase 2 features like web visibility and booking.</li>
+                                <li>**6-Month Pilot Term:** We'll reassess and tailor the partnership after the pilot to best fit mutual needs.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Option 2: Hardware Purchase -->
+                    <div class="option-card flex flex-col">
+                        <div class="option-card-header p-4 bg-gray-50">
+                            <h3 class="text-xl font-bold text-center">Hardware Purchase</h3>
+                            <p class="text-center text-sm text-secondary">(Maximize Your Share)</p>
+                        </div>
+                        <div class="p-6 flex-grow">
+                             <p class="font-bold text-lg text-center text-header-text mb-4">75% / 25%</p>
+                             <p class="text-center text-sm text-secondary mb-6">Revenue Share in Your Favor</p>
+                            <ul class="text-sm space-y-3 option-card">
+                                <li>**You Invest Upfront:** Land of 1000 Hills covers the project costs ($9k - $11.5k) for hardware and installation.</li>
+                                <li>**Higher Revenue Share:** You retain a much larger portion (75%) of the revenue from day one.</li>
+                                <li>**Full Technical Support:** Includes our complete support package for hardware and software.</li>
+                                <li>**Standard System:** We collaborate on design, but core system software changes are more limited compared to the Pilot Partnership.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Option 3: Service Project -->
+                    <div class="option-card flex flex-col">
+                        <div class="option-card-header p-4 bg-gray-50">
+                            <h3 class="text-xl font-bold text-center">Full Service Project</h3>
+                            <p class="text-center text-sm text-secondary">(Full Ownership)</p>
+                        </div>
+                        <div class="p-6 flex-grow">
+                            <p class="font-bold text-lg text-center text-header-text mb-4">90% / 10%</p>
+                            <p class="text-center text-sm text-secondary mb-6">Revenue Share (SaaS Fee)</p>
+                            <ul class="text-sm space-y-3 option-card">
+                                <li>**You Own Everything:** Land of 1000 Hills pays a one-time project fee of $5,000 - $7,500 per room.</li>
+                                <li>**Custom Designed System:** We work with you to custom design the system to your exact specifications.</li>
+                                <li>**Lowest Ongoing Fee:** You retain 90% of the revenue, with just a 10% fee for software, support, and payment processing.</li>
+                                <li>**Fixed System:** The system is installed to your spec; future development or changes would be scoped as new projects.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Section 6: Founder's Note -->
+            <section id="note" class="content-section p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-6">A Note From Phil</h2>
+                 <div class="space-y-4 text-lg text-primary">
+                    <p>Sharee,</p>
+                    <p>Thank you for taking the time to meet today. As you can likely tell, I am incredibly excited about this potential partnership. Based on the figures and calculations we ran through together, it's clear there is real potential for Paydax to bring significant value to you and your team.</p>
+                    <p>I also believe that working with you, and leveraging the level of experience you bring to the table in project management and user experience, would be an immense value to our team. All in all, this could be a fantastic project for both of us—not just for the profitability of our businesses, but as a way to design a system that could bring value to future businesses as well.</p>
+                    <p>I truly appreciate you taking the time to meet with me and consider this partnership with our team. Seth and I are looking forward to the possibility of working together.</p>
+                    <p class="mt-8">Cheers,</p>
+                    <p class="font-semibold">Phil Thornton</p>
+                    <p class="text-base text-secondary">Co-Founder, Paydax</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const sections = document.querySelectorAll('.content-section');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetId = this.dataset.target;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    sections.forEach(section => {
+                        section.classList.toggle('active', section.id === targetId);
+                    });
+                });
+            });
+
+            // --- Financial Model Logic ---
+            const priceSlider = document.getElementById('pricePerHour');
+            const utilizationSlider = document.getElementById('utilizationRate');
+            const daysInput = document.getElementById('daysOpen');
+            const priceValue = document.getElementById('priceValue');
+            const utilizationValue = document.getElementById('utilizationValue');
+            
+            const monthlyPerRoomOutput = document.getElementById('monthly-per-room');
+            const annualPerRoomOutput = document.getElementById('annual-per-room');
+            const totalMonthlyOutput = document.getElementById('total-monthly');
+            const totalAnnualOutput = document.getElementById('total-annual');
+
+            const financialsChartCanvas = document.getElementById('financialsChart');
+            let financialsChart;
+
+            function formatCurrency(value) {
+                return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            }
+
+            function calculateAndDisplayRevenue() {
+                if (!priceSlider) return; 
+                const price = parseFloat(priceSlider.value);
+                const utilization = parseFloat(utilizationSlider.value) / 100;
+                const days = parseInt(daysInput.value) || 0;
+                const rooms = 5;
+                const dailyHours = 13;
+
+                priceValue.textContent = `$${price}/hr`;
+                utilizationValue.textContent = `${Math.round(utilization * 100)}%`;
+
+                const dailyUtilizationHours = dailyHours * utilization;
+                const monthlyRevenuePerRoom = price * dailyUtilizationHours * days;
+                const annualRevenuePerRoom = monthlyRevenuePerRoom * 12;
+                const totalMonthlyRevenue = monthlyRevenuePerRoom * rooms;
+                const totalAnnualRevenue = annualRevenuePerRoom * rooms;
+
+                monthlyPerRoomOutput.textContent = formatCurrency(monthlyRevenuePerRoom);
+                annualPerRoomOutput.textContent = formatCurrency(annualRevenuePerRoom);
+                totalMonthlyOutput.textContent = formatCurrency(totalMonthlyRevenue);
+                totalAnnualOutput.textContent = formatCurrency(totalAnnualRevenue);
+                
+                updateChart(totalMonthlyRevenue, totalAnnualRevenue);
+            }
+
+            function updateChart(monthly, annual) {
+                if(financialsChart) {
+                    financialsChart.data.datasets[0].data = [monthly, annual];
+                    financialsChart.update();
+                }
+            }
+
+            function initializeChart() {
+                 if (financialsChartCanvas) {
+                    financialsChart = new Chart(financialsChartCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Total Estimated Monthly Revenue', 'Total Estimated Annual Revenue'],
+                            datasets: [{
+                                label: 'Revenue in USD',
+                                data: [0, 0], 
+                                backgroundColor: [
+                                    'rgba(140, 115, 93, 0.7)', 
+                                    'rgba(85, 107, 47, 0.7)'   
+                                ],
+                                borderColor: [
+                                    'rgba(140, 115, 93, 1)',
+                                    'rgba(85, 107, 47, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return formatCurrency(value);
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += formatCurrency(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            
+            const financialModelSection = document.getElementById('financials');
+            const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.attributeName === 'class' && financialModelSection.classList.contains('active')) {
+                        if (!financialsChart) {
+                            initializeChart();
+                        }
+                        calculateAndDisplayRevenue();
+                    }
+                }
+            });
+
+            if (financialModelSection) {
+                 observer.observe(financialModelSection, { attributes: true });
+            }
+
+            if(priceSlider && utilizationSlider && daysInput) {
+                priceSlider.addEventListener('input', calculateAndDisplayRevenue);
+                utilizationSlider.addEventListener('input', calculateAndDisplayRevenue);
+                daysInput.addEventListener('input', calculateAndDisplayRevenue);
+                 if (financialModelSection.classList.contains('active')) {
+                    initializeChart();
+                    calculateAndDisplayRevenue();
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
